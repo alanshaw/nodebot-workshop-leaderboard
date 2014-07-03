@@ -1,74 +1,225 @@
 <!doctype html>
-<ul id="leaderboard"></ul>
-<script src="/socket.io/socket.io.js"></script>
-<script>
-  (function () {
-    var list = document.getElementById("leaderboard")
-    var socket = io("http://localhost:8080")
-
-    socket.on("state", function (data) {
-      var state = data["Nodebot Workshop"]
-      if (!state) return;
-
-      console.log("Got new state", state)
-
-      var students = Object.keys(state).map(function (ip) {
-        return {
-          ip: ip,
-          name: state[ip].name,
-          count: state[ip].exercises.length,
-          last: state[ip].exercises[state[ip].exercises.length - 1]
-        }
-      }).sort(function (a, b) {
-        if (a.count < b.count) {
-          return -1
-        } else if (a.count > b.count) {
-          return 1
-        } else if (a.last.timestamp < b.last.timestamp) {
-          return 1
-        } else if (a.last.timestamp > b.last.timestamp) {
-          return -1
-        }
-        return 0
-      })
-      
-      console.log(students)
-
-      list.innerHTML = ""
-
-      students.forEach(function (s) {
-        list.appendChild(createItem(s))
-      })
-    })
-    
-    function createItem (s) {
-      var item = document.createElement("li")
-
-      var ip = document.createElement("span")
-      ip.className = "name"
-      ip.appendChild(document.createTextNode(s.name || s.ip))
-
-      item.appendChild(ip)
-
-      var count = document.createElement("span")
-      count.className = "count"
-      count.appendChild(document.createTextNode(s.count))
-
-      item.appendChild(count)
-
-      var last = document.createElement("span")
-      last.className = "last"
-      last.appendChild(document.createTextNode(s.last.name))
-
-      item.appendChild(last)
-
-      var time = document.createElement("time")
-      time.setAttribute("datetime", new Date(s.last.timestamp).toISOString())
-      time.appendChild(document.createTextNode(new Date(s.last.timestamp).toString()))
-
-      item.appendChild(time)
-      
-      return item
+<html>
+<head>
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+  <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+  <style>
+    body {
+      background: #F8E01E;
     }
-  })()
-</script>
+    h1 {
+      margin-bottom: 40px;
+    }
+    #leaderboard time {
+      float: right
+    }
+    #leaderboard .count {
+      font-size: 3em;
+      float: left;
+      line-height: 1;
+      width: 60px;
+    }
+    .nodebot{
+      margin:0 auto -50px;
+      z-index:2;
+      opacity: 1;
+      width:250px; /* all the nested css is done as percentages of this, so you can scale it to your <3's content */
+      height:250px;
+      background-color: #F8E01E;
+      position:relative;
+      top: -50px;
+      left: -50px;
+    }
+    .nodebot .icon{
+      position:absolute;
+      bottom:8%;
+      right:8%;
+      width:45.6%;
+      height:50%;
+    }
+    .nodebot .icon * {
+      background: #2e2e2c;
+    }
+    .nodebot .icon .bobble{
+      width:12.5%;
+      height:12%;
+      border-radius: 100%;
+      margin:5% auto -3.8%;
+    }
+    .nodebot .antenna{
+      width:6%;
+      margin:0 auto 4%;
+      height:16.5%;
+      border-bottom-left-radius: 80% 30%;
+      border-bottom-right-radius: 80% 30%;
+    }
+    .nodebot .head{
+      width: 100%;
+      height: 48.5%;
+      border-top-left-radius: 15% 25%;
+      border-top-right-radius: 15% 25%;
+      position:relative;
+    }
+    .nodebot .head .eye{
+      width:18%;
+      height:33.5%;
+      margin:0 18.2%;
+      border-radius: 100%;
+      background-color: #F8E01E;
+      display: inline-block;
+      position:absolute;
+      top:26%;
+      left: 0px;
+      -webkit-animation: blink 5s 2s infinite;
+      animation: blink 5s 2s infinite;
+    }
+    .nodebot .eye.right{
+      left: auto;
+      right:0;
+    }
+    .nodebot .head .eye.blink {
+      height: 6%;
+      top:36%;
+      border-radius: 0;
+      background-color: #000;
+    }
+    .nodebot .neck{
+      border-radius: 20px;
+      width: 69%;
+      height: 6%;
+      margin: 3.6% auto 0;
+    }
+    .nodebot .neck:last-child{
+      width: 48%;
+    }
+
+    @-webkit-keyframes blink {
+      0%, 4%, 8%, 100%{
+        height:33.5%;
+        border-radius: 100%;
+        background-color: #F8E01E;
+        top:26%;
+      }
+      2%, 6% {
+        height: 6%;
+        top:36%;
+        border-radius: 0;
+        background-color: #000;
+      }
+    }
+
+    @keyframes blink {
+      0%, 4%, 8%, 100%{
+        height:33.5%;
+        border-radius: 100%;
+        background-color: #F8E01E;
+        top:26%;
+      }
+      2%, 6% {
+        height: 6%;
+        top:36%;
+        border-radius: 0;
+        background-color: #000;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="nodebot">
+    <div class="icon">
+      <div class="bobble"></div>
+      <div class="antenna"></div>
+      <div class="head">
+        <div class="eye left"></div>
+        <div class="eye right"></div>
+      </div>
+      <div class="neck"></div>
+      <div class="neck"></div>
+    </div>
+  </div>
+  <div class="container">
+    <h1 class="text-center">Leaderboard</h1>
+    <ul id="leaderboard" class="list-group"></ul>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    (function () {
+      var list = document.getElementById("leaderboard")
+      var socket = io("http://localhost:8080")
+  
+      socket.on("state", function (data) {
+        var state = data["Nodebot Workshop"]
+        if (!state) return;
+  
+        console.log("Got new state", state)
+  
+        var students = Object.keys(state).map(function (ip) {
+          return {
+            ip: ip,
+            name: state[ip].name,
+            count: state[ip].exercises.length,
+            last: state[ip].exercises[state[ip].exercises.length - 1]
+          }
+        }).sort(function (a, b) {
+          if (a.count < b.count) {
+            return -1
+          } else if (a.count > b.count) {
+            return 1
+          } else if (a.last.timestamp < b.last.timestamp) {
+            return 1
+          } else if (a.last.timestamp > b.last.timestamp) {
+            return -1
+          }
+          return 0
+        })
+        
+        console.log(students)
+  
+        list.innerHTML = ""
+  
+        students.forEach(function (s) {
+          list.appendChild(createItem(s))
+        })
+      })
+      
+      function createItem (s) {
+        var item = document.createElement("li")
+        item.className = "list-group-item"
+
+        var count = document.createElement("span")
+        count.className = "count"
+        count.appendChild(document.createTextNode(s.count))
+
+        item.appendChild(count)
+
+        var time = document.createElement("time")
+        time.setAttribute("datetime", new Date(s.last.timestamp).toISOString())
+        time.appendChild(document.createTextNode(new Date(s.last.timestamp).toString()))
+
+        item.appendChild(time)
+  
+        var ip = document.createElement("h4")
+        ip.className = "list-group-item-heading name"
+        ip.appendChild(document.createTextNode(s.name || s.ip))
+  
+        item.appendChild(ip)
+
+        var text = document.createElement("p")
+        text.className = "list-group-item-text"
+
+        item.appendChild(text)
+  
+        var last = document.createElement("span")
+        last.className = "last"
+        last.appendChild(document.createTextNode(s.last.name))
+
+        text.appendChild(last)
+
+        return item
+      }
+    })()
+  </script>
+</body>
+</html>
