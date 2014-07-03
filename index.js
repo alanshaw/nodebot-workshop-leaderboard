@@ -2,7 +2,7 @@ var http = require("http")
   , fs = require("fs")
   , dgram = require("dgram")
 
-var state = {} // {workshop: {IP: [passed exercises]}}
+var state = {} // {workshop: {IP: {name: "username", exercises: [passed exercises]}}}
 
 var server = http.createServer(function (req, res) {
   res.writeHead(200, {"Content-Type": "text/html"})
@@ -17,6 +17,21 @@ server.listen(port, function () {
 })
 
 var io = require("socket.io")(server)
+
+io.on("connection", function (socket) {
+  socket.emit("state", state)
+
+  socket.on("name", function (name, ip) {
+    Object.keys(state).forEach(function (workshop) {
+      Object.keys(workshop).forEach(function (workshopIp) {
+        if (ip == workshopIp) {
+          state[workshop][ip].name = name
+        }
+      })
+    })
+  })
+})
+
 var sock = dgram.createSocket("udp4")
 
 sock.bind(broadcastPort, function () {
@@ -38,9 +53,10 @@ sock.on("message", function (data, rinfo) {
   if (data.mode != "verify") return console.log("Ignoring non-verify message", data)
 
   state[data.workshop] = state[data.workshop] || {}
-  state[data.workshop][rinfo.address] = state[data.workshop][rinfo.address] || []
+  state[data.workshop][rinfo.address] = state[data.workshop][rinfo.address] || {}
+  state[data.workshop][rinfo.address].exercises = state[data.workshop][rinfo.address].exercises || []
 
-  var passedExercises = state[data.workshop][rinfo.address]
+  var passedExercises = state[data.workshop][rinfo.address].exercises
 
   if (passedExercises.indexOf(data.exercise) > -1) {
     return console.log("Ignoring message", rinfo.address, "already passed", data.exercise)
@@ -48,7 +64,7 @@ sock.on("message", function (data, rinfo) {
   
   console.log(rinfo.address, "just completed", data.exercise)
 
-  passedExercises.push(data.exercise)
+  passedExercises.push({name: data.exercise, timestamp: data.timestamp})
 
   io.emit("state", state)
 })
