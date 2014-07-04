@@ -10,7 +10,7 @@ var server = http.createServer(function (req, res) {
 })
 
 var port = process.env.PORT || 8080
-var broadcastPort = process.env.PROGRESS_BROADCAST_PORT || 1337
+var broadcastPort = process.env.PROGRESS_BROADCAST_PORT || 1138
 
 server.listen(port, function () {
   console.log("Leaderboard listening on *:" + port)
