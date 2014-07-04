@@ -57,7 +57,7 @@ sock.on("message", function (data, rinfo) {
 
   var passedExercises = state[data.workshop][rinfo.address].exercises
 
-  if (passedExercises.indexOf(data.exercise) > -1) {
+  if (passedExercises.map(function (e) { return e.name }).indexOf(data.exercise) > -1) {
     return console.log("Ignoring message", rinfo.address, "already passed", data.exercise)
   }
   
