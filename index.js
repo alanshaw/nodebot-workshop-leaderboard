@@ -23,12 +23,13 @@ io.on("connection", function (socket) {
 
   socket.on("name", function (name, ip) {
     Object.keys(state).forEach(function (workshop) {
-      Object.keys(workshop).forEach(function (workshopIp) {
+      Object.keys(state[workshop]).forEach(function (workshopIp) {
         if (ip == workshopIp) {
           state[workshop][ip].name = name
         }
       })
     })
+    io.emit("state", state)
   })
 })
 

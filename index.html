@@ -3,6 +3,7 @@
 <head>
   <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+  <script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
   <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
   <style>
     body {
@@ -19,6 +20,19 @@
       float: left;
       line-height: 1;
       margin-right: 15px;
+    }
+    #leaderboard .edit {
+      margin: 0 8px;
+      font-size: 0.85em;
+      color: #ccc;
+    }
+    #leaderboard .edit:hover {
+      color: #000;
+      text-decoration: none;
+    }
+    #leaderboard input {
+      display: inline-block;
+      max-width: 200px;
     }
     .nodebot{
       margin:0 auto -50px;
@@ -146,7 +160,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     (function () {
-      var list = document.getElementById("leaderboard")
+      var list = $("#leaderboard")
       var socket = io("http://localhost:8080")
   
       socket.on("state", function (data) {
@@ -164,9 +178,9 @@
           }
         }).sort(function (a, b) {
           if (a.count < b.count) {
-            return -1
-          } else if (a.count > b.count) {
             return 1
+          } else if (a.count > b.count) {
+            return -1
           } else if (a.last.timestamp < b.last.timestamp) {
             return 1
           } else if (a.last.timestamp > b.last.timestamp) {
@@ -177,45 +191,69 @@
         
         console.log(students)
   
-        list.innerHTML = ""
+        list.empty()
   
         students.forEach(function (s) {
-          list.appendChild(createItem(s))
+          list.append(createItem(s))
         })
       })
       
       function createItem (s) {
-        var item = document.createElement("li")
-        item.className = "list-group-item"
+        var item = $("<li/>")
+        item.addClass("list-group-item")
 
-        var count = document.createElement("span")
-        count.className = "count"
-        count.appendChild(document.createTextNode(s.count))
+        var count = $("<span/>")
+        count.addClass("count")
+        count.text(s.count)
 
-        item.appendChild(count)
+        item.append(count)
 
-        var time = document.createElement("time")
-        time.setAttribute("datetime", new Date(s.last.timestamp).toISOString())
-        time.appendChild(document.createTextNode(new Date(s.last.timestamp).toString()))
+        var time = $("<time/>")
+        time.attr("datetime", new Date(s.last.timestamp).toISOString())
+        time.text(new Date(s.last.timestamp).toString())
 
-        item.appendChild(time)
+        item.append(time)
   
-        var ip = document.createElement("h4")
-        ip.className = "list-group-item-heading name"
-        ip.appendChild(document.createTextNode(s.name || s.ip))
+        var ip = $("<h4/>")
+        ip.addClass("list-group-item-heading name")
+        ip.text(s.name || s.ip)
   
-        item.appendChild(ip)
+        item.append(ip)
+        
+        if (!s.name) {
+          var edit = $("<a/>")
+          edit.attr("href", "#")
+          edit.addClass("glyphicon glyphicon-pencil edit")
 
-        var text = document.createElement("p")
-        text.className = "list-group-item-text"
+          edit.click(function (e) {
+            e.preventDefault()
 
-        item.appendChild(text)
+            var form = $("<form/>")
+            form.html('<input type="text" name="name" class="form-control"/> <button type="submit" class="btn btn-danger">Change</button>')
+
+            $("input", form).attr("placeholder", s.ip)
+
+            $("button", form).click(function (e) {
+              e.preventDefault()
+              socket.emit("name", $("input", form).val(), s.ip)
+            })
+            
+            edit.closest(".name").replaceWith(form)
+          })
+
+          ip.append(edit)
+        }
+
+        var text = $("<p/>")
+        text.addClass("list-group-item-text")
+
+        item.append(text)
   
-        var last = document.createElement("span")
-        last.className = "last"
-        last.appendChild(document.createTextNode(s.last.name))
+        var last = $("<span/>")
+        last.addClass("last")
+        last.text(s.last.name)
 
-        text.appendChild(last)
+        text.append(last)
 
         return item
       }
