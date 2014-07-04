@@ -50,7 +50,6 @@ sock.on("message", function (data, rinfo) {
 
   if (!data.workshop) return console.log("Ignoring non-workshop message", data)
   if (data.event != "pass") return console.log("Ignoring non-pass message", data)
-  if (data.mode != "verify") return console.log("Ignoring non-verify message", data)
 
   state[data.workshop] = state[data.workshop] || {}
   state[data.workshop][rinfo.address] = state[data.workshop][rinfo.address] || {}
